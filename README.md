@@ -28,10 +28,11 @@ realtime-chat-server/
 npm install
 ```
 
-2. ליצור קובץ `.env` (או להשתמש ב־`.env.example`) ולהגדיר את חיבור MongoDB:
+2. ליצור קובץ `.env` (או להעתיק `.env.example`) ולהגדיר את הפרטים של Supabase:
 
-```dotenv
-MONGO_URI=mongodb://localhost:27017/realtime-chat
+```env
+SUPABASE_URL=https://lhxmibzflaoipehsosjt.supabase.co
+SUPABASE_KEY=sb_publishable_JXkdxSfkMQKZ9uSiGq1r6w_TqOVDFCf
 ```
 
 3. להריץ את השרת:

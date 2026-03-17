@@ -3,8 +3,8 @@ const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
 
-const { connectDb } = require("./db");
 const { initSocket } = require("./socket");
+const { supabase } = require("./supabase");
 
 const app = express();
 const server = http.createServer(app);
@@ -12,15 +12,19 @@ const server = http.createServer(app);
 // Serve static client files from /public
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-// Example REST endpoint to fetch recent messages (optional)
-const Message = require("./models/Message");
+// Simple helper API to fetch recent messages
 app.get("/api/messages", async (req, res) => {
-  try {
-    const messages = await Message.find().sort({ timestamp: 1 }).limit(100);
-    res.json(messages);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to load messages" });
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .order("timestamp", { ascending: true })
+    .limit(100);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
   }
+
+  res.json(data);
 });
 
 const io = new Server(server, {
@@ -33,9 +37,6 @@ const io = new Server(server, {
 initSocket(io);
 
 const PORT = process.env.PORT || 3001;
-
-connectDb().then(() => {
-  server.listen(PORT, () => {
-    console.log(`Realtime chat server listening on http://localhost:${PORT}`);
-  });
+server.listen(PORT, () => {
+  console.log(`Realtime chat server listening on http://localhost:${PORT}`);
 });
