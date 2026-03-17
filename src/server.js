@@ -1,42 +1,68 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const path = require("path");
+require('dotenv').config();
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const mongoose = require('mongoose');
 
-const { initSocket } = require("./socket");
-const { supabase } = require("./supabase");
-
+// Initialize app
 const app = express();
-const server = http.createServer(app);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// Serve static client files from /public
-app.use(express.static(path.join(__dirname, "..", "public")));
+// Allow CORS from frontend to receive cookies in dev
+const frontend = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({ origin: frontend, credentials: true }));
 
-// Simple helper API to fetch recent messages
-app.get("/api/messages", async (req, res) => {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .order("timestamp", { ascending: true })
-    .limit(100);
+// Add COOP header in development to allow Google popups/postMessage communication
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    next();
+  });
+}
 
-  if (error) {
-    return res.status(500).json({ error: error.message });
+// In-memory messages store (will be moved to DB later)
+const messages = [];
+
+async function start() {
+  // Read MongoDB URI from environment (.env). Fail early if not set so the value is defined in one place.
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) {
+    console.error('MONGODB_URI is not set. Please add MONGODB_URI to your beckend/.env file. Example: MONGODB_URI=mongodb://localhost:27017/realtime-chat');
+    process.exit(1);
+  }
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected to MongoDB')
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
   }
 
-  res.json(data);
-});
+  // Routes need access to messages, so require as a function
+  const routes = require('./routes')(messages);
+  app.use('/api', routes);
 
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
-});
+  // Serve frontend static files (public folder at project root)
+  app.use(express.static(path.join(__dirname, '..', 'public')));
 
-initSocket(io);
+  // Create HTTP server and attach socket.io
+  const server = http.createServer(app);
+  require('./socket')(server, messages);
 
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Realtime chat server listening on http://localhost:${PORT}`);
-});
+  // Read PORT from environment to avoid hardcoded defaults
+  const PORT = process.env.PORT;
+  if (!PORT) {
+    console.error('PORT is not set. Please add PORT to your beckend/.env file. Example: PORT=3000');
+    process.exit(1);
+  }
+  console.log('GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI);
+  server.listen(Number(PORT), () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
+}
+
+start();
