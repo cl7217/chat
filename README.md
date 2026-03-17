@@ -22,8 +22,21 @@ realtime-chat-server/
 
 ## 🚀 הרצת השרת
 
+1. להתקין תלותיות:
+
 ```bash
 npm install
+```
+
+2. ליצור קובץ `.env` (או להשתמש ב־`.env.example`) ולהגדיר את חיבור MongoDB:
+
+```dotenv
+MONGO_URI=mongodb://localhost:27017/realtime-chat
+```
+
+3. להריץ את השרת:
+
+```bash
 npm start
 ```
 
