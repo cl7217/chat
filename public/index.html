@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Realtime Chat</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+    #chat { flex: 1; padding: 16px; overflow-y: auto; background: #f6f6f6; }
+    #chat .message { margin-bottom: 12px; }
+    #chat .meta { font-size: 0.85rem; color: #555; }
+    #send { display: flex; padding: 16px; gap: 8px; border-top: 1px solid #ddd; background: white; }
+    #message { flex: 1; padding: 10px; font-size: 1rem; }
+    #send button { padding: 10px 16px; font-size: 1rem; }
+    #users { padding: 16px; border-top: 1px solid #ddd; background: #fafafa; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+  <div id="send">
+    <input id="message" type="text" placeholder="Type your message…" autocomplete="off" />
+    <button id="sendBtn">Send</button>
+  </div>
+  <div id="users">Connected users: <span id="userCount">0</span></div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+
+    const chat = document.getElementById('chat');
+    const messageInput = document.getElementById('message');
+    const sendBtn = document.getElementById('sendBtn');
+    const userCount = document.getElementById('userCount');
+
+    const userName = prompt('What is your name?')?.trim() || 'Anonymous';
+
+    function appendMessage(msg) {
+      const node = document.createElement('div');
+      node.className = 'message';
+      node.innerHTML = `
+        <div class="meta"><strong>${msg.sender?.name || msg.sender?.id}</strong> · ${new Date(msg.timestamp).toLocaleTimeString()}</div>
+        <div>${msg.body}</div>
+      `;
+      chat.appendChild(node);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    socket.on('connect', () => {
+      socket.emit('login', { id: socket.id, name: userName });
+    });
+
+    socket.on('message', (msg) => {
+      appendMessage(msg);
+    });
+
+    socket.on('users', (users) => {
+      userCount.textContent = users.length;
+    });
+
+    sendBtn.addEventListener('click', () => {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      socket.emit('message', text);
+      messageInput.value = '';
+      messageInput.focus();
+    });
+
+    messageInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        sendBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>
