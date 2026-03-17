@@ -2,10 +2,10 @@
   "name": "realtime-chat-server",
   "version": "1.0.0",
   "description": "Real-time chat server using Express + Socket.io",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "engines": {
     "node": ">=16"
