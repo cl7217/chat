@@ -34,9 +34,19 @@ export default function App() {
 
     socket.on('connect', () => setConnected(true))
     socket.on('disconnect', () => setConnected(false))
-    socket.on('messages', (ms) => setMessages(ms))
-    socket.on('message', (m) => setMessages(prev => [...prev, m]))
+    // initial messages (filter out system notifications)
+    socket.on('messages', (ms) => setMessages(ms.filter(m => !(m.user && (m.user.username === 'System' || m.user.username === 'anon' && !m.text)))) )
+    // single new message (ignore system join/leave)
+    socket.on('message', (m) => {
+      if (!m || !m.text) return
+      if (m.user && m.user.username === 'System') return
+      setMessages(prev => [...prev, m])
+    })
     socket.on('users', (list) => setUsers(list))
+
+    // ensure no-op handlers for legacy system events so they won't add chat messages
+    socket.on('user-joined', () => {})
+    socket.on('user-left', () => {})
 
     socket.emit('join', user)
 

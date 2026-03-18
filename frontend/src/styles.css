@@ -48,22 +48,70 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:var
 .bubble .text{display:block;font-size:15px;color:var(--text);line-height:1.4}
 .bubble .meta{display:block;margin-top:8px;font-size:12px;color:var(--muted)}
 
-/* My messages (right) */
-.msg.me{justify-content:flex-end}
+/* Message side positioning: use flex-direction to avoid order conflicts */
+.messages > .msg { display:flex; align-items:flex-start; justify-content:flex-start; }
 
-/* Other messages (left) */
-.msg.other{justify-content:flex-start}
+/* My messages (left) */
+.messages > .msg.me { flex-direction: row; }
+.messages > .msg.me .avatar { margin-right:12px; margin-left:0; order: 1; }
+.messages > .msg.me .bubble { order: 2; text-align:left; margin-left:8px; margin-right:auto; }
 
-/* ensure bubbles can expand on small screens but keep readable line length */
-.msg .bubble{max-width:80%}
+/* Other users (right) */
+.messages > .msg.other { flex-direction: row-reverse; }
+.messages > .msg.other .avatar { margin-left:12px; margin-right:0; order: 1; }
+.messages > .msg.other .bubble { order: 2; text-align:right; margin-right:8px; margin-left:auto; }
+
+/* FORCE: ensure left/right placement for .me and .other */
+.chat-window .messages > .msg { display:flex !important; align-items:flex-start !important; }
+.chat-window .messages > .msg.me { flex-direction: row !important; }
+.chat-window .messages > .msg.me .avatar { order: 1 !important; margin-right:12px !important; margin-left:0 !important; }
+.chat-window .messages > .msg.me .bubble { order: 2 !important; margin-left:8px !important; margin-right:auto !important; text-align:left !important; }
+
+.chat-window .messages > .msg.other { flex-direction: row-reverse !important; }
+.chat-window .messages > .msg.other .avatar { order: 1 !important; margin-left:12px !important; margin-right:0 !important; }
+.chat-window .messages > .msg.other .bubble { order: 2 !important; margin-right:8px !important; margin-left:auto !important; text-align:right !important; }
+/* End force */
+
+/* Strong visual overrides to force clear left/right color and make differences obvious */
+.chat-window .messages > .msg.me .bubble {
+  background: var(--me-bg) !important;
+  border-color: rgba(37,99,235,0.18) !important;
+  box-shadow: 0 10px 30px rgba(37,99,235,0.06) !important;
+}
+.chat-window .messages > .msg.other .bubble {
+  background: var(--other-bg) !important;
+  border-color: rgba(15,23,42,0.04) !important;
+  box-shadow: 0 6px 18px rgba(12,16,24,0.04) !important;
+}
+.chat-window .messages > .msg.me .bubble .text { color: #022a4e !important; font-weight:600 !important; }
+.chat-window .messages > .msg.other .bubble .text { color: var(--text) !important; }
+.chat-window .messages > .msg.me .avatar { background: linear-gradient(90deg,var(--accent),var(--accent-2)) !important; color:#fff !important; }
+.chat-window .messages > .msg.other .avatar { background:#fff !important; color:var(--accent) !important; border:1px solid rgba(15,23,42,0.03) !important; }
 
 /* Composer */
 .composer{display:flex;gap:12px;padding:12px;border-top:1px solid rgba(15,23,42,0.04);align-items:center}
 .composer input[type="text"], .composer textarea{flex:1;padding:14px 16px;border-radius:12px;border:1px solid rgba(15,23,42,0.06);background:#fff;color:var(--text);min-height:52px;resize:none}
 .composer .send{padding:12px 18px;border-radius:12px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;border:none;cursor:pointer;font-weight:700}
 
-/* Login card */
-.login{max-width:520px;margin:60px auto;padding:24px;background:var(--panel);border-radius:14px;box-shadow:var(--shadow)}
+/* Login card - improved layout */
+.login{
+  max-width:520px;
+  margin:8vh auto; /* center vertically-ish */
+  padding:28px 28px;
+  background:var(--panel);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  align-items:stretch;
+}
+.login h2{margin:0;font-size:1.4rem;text-align:center}
+.login input{display:block;width:100%;padding:14px 12px;border-radius:10px;border:1px solid rgba(15,23,42,0.08);font-size:1rem}
+.login .actions{display:flex;gap:10px;justify-content:space-between;align-items:center}
+.login .buttons{display:flex;gap:10px;justify-content:center}
+.btn-google{display:flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);background:#fff;cursor:pointer;width:100%}
+.login .note{margin-top:6px;font-size:0.95rem;text-align:center}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px}
@@ -96,14 +144,12 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:var
   .main{max-width:1200px;margin:0 auto}
 }
 
-/* Ensure other users (default) on left, 'me' on right */
-.msg{justify-content:flex-start}
-.msg.me{justify-content:flex-end}
-
-/* Treat any .msg that does not have .me as 'other' for safety */
-.msg:not(.me) .avatar{order:1;margin-right:12px;margin-left:0}
-.msg:not(.me) .bubble{order:2;margin-left:8px;margin-right:auto;text-align:left}
-
-/* Explicit .me rules */
-.msg.me .avatar{order:2;margin-left:12px;margin-right:0}
-.msg.me .bubble{order:1;margin-right:8px;margin-left:auto;text-align:right}
+/* DEBUG: highly visible rules to confirm selector application — remove after testing */
+.chat-window .messages > .msg.other .bubble {
+  background: #fff0f2 !important;
+  border: 3px solid #ff4d4f !important;
+  box-shadow: 0 12px 40px rgba(255,77,79,0.08) !important;
+}
+.chat-window .messages > .msg.me .bubble {
+  border: 3px solid #10b981 !important; /* green for me */
+}

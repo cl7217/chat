@@ -29,8 +29,24 @@ module.exports = function initSocket(server, messages) {
       socket.emit('messages', messages);
       // send current users list to everyone
       io.emit('users', connectedUsers);
-      // also notify others that a user joined
-      socket.broadcast.emit('user-joined', user);
+      // Removed broadcasting a chat-style 'user-joined' system message to avoid showing it in chat UI
+      // socket.broadcast.emit('user-joined', user);
+    });
+
+    // Allow client to notify server about profile updates (avatar/name) so others get updated info
+    socket.on('update-user', (user) => {
+      if (!user || !user.id) return;
+      // update socket data
+      socket.data.user = user;
+      // replace or add in connectedUsers
+      const idx = connectedUsers.findIndex(u => u.id === user.id);
+      if (idx !== -1) {
+        connectedUsers[idx] = user;
+      } else {
+        connectedUsers.push(user);
+      }
+      // broadcast updated users list
+      io.emit('users', connectedUsers);
     });
 
     // Receive a chat message from a client
@@ -56,7 +72,8 @@ module.exports = function initSocket(server, messages) {
         if (idx !== -1) connectedUsers.splice(idx, 1);
         // broadcast updated users list and user-left
         io.emit('users', connectedUsers);
-        io.emit('user-left', user);
+        // Removed broadcasting a chat-style 'user-left' system message to avoid showing it in chat UI
+        // io.emit('user-left', user);
       }
       console.log('Socket disconnected:', socket.id, reason);
     });
