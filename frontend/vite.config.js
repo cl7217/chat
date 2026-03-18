@@ -2,8 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 const isDev = process.env.NODE_ENV !== 'production'
+const basePath = process.env.VITE_BASE || '/'
 
 export default defineConfig({
+  base: basePath,
   plugins: [react()],
   ...(isDev ? {
     server: {
