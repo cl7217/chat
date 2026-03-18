@@ -13,12 +13,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Allow CORS from frontend to receive cookies in dev
-const allowedOrigins = [
-  process.env.FRONTEND_URL ,
-  'https://chat-frontend-chaya.netlify.app'
-];
+const frontend = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+const allowedOrigins = [frontend, 'https://chat-frontend-chaya.netlify.app'];
+console.log('CORS allowedOrigins:', allowedOrigins);
 app.use(cors({
   origin: function (origin, callback) {
+    console.log('CORS incoming origin:', origin);
     // allow requests with no origin (e.g., server-to-server, curl)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);

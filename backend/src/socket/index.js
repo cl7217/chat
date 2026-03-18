@@ -2,12 +2,15 @@
 module.exports = function initSocket(server, messages) {
   const { Server } = require('socket.io');
   // use same allowedOrigins as server to support localhost and Netlify frontend
-  const allowedOrigins = [process.env.FRONTEND_URL ||  'https://chat-frontend-chaya.netlify.app'];
+  const frontend = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+  const allowedOrigins = [frontend, 'https://chat-frontend-chaya.netlify.app'];
+  console.log('Socket CORS allowedOrigins:', allowedOrigins);
 
   const io = new Server(server, {
     path: '/socket.io',
     cors: {
       origin: function (origin, callback) {
+        console.log('Socket CORS incoming origin:', origin);
         // allow requests with no origin (e.g., server-to-server, curl)
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
