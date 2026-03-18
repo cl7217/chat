@@ -13,8 +13,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Allow CORS from frontend to receive cookies in dev
-const frontend = process.env.FRONTEND_URL || 'http://localhost:5173';
-app.use(cors({ origin: frontend, credentials: true }));
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'https://chat-frontend-chaya.netlify.app'
+];
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (e.g., server-to-server, curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+    return callback(new Error('CORS policy: origin not allowed'), false);
+  },
+  credentials: true
+}));
 
 // Add COOP header in development to allow Google popups/postMessage communication
 if (process.env.NODE_ENV !== 'production') {
