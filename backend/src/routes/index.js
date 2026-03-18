@@ -161,7 +161,7 @@ module.exports = function (messages) {
 
   // Authorization code flow: redirect user to Google consent page
   router.get('/auth/google/start', (req, res) => {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL ;
     const oauth2Client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, redirectUri);
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',

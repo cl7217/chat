@@ -14,7 +14,7 @@ app.use(cookieParser());
 
 // Allow CORS from frontend to receive cookies in dev
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
+  process.env.FRONTEND_URL ,
   'https://chat-frontend-chaya.netlify.app'
 ];
 app.use(cors({

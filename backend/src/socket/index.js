@@ -2,7 +2,7 @@
 module.exports = function initSocket(server, messages) {
   const { Server } = require('socket.io');
   // use same allowedOrigins as server to support localhost and Netlify frontend
-  const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173', 'https://chat-frontend-chaya.netlify.app'];
+  const allowedOrigins = [process.env.FRONTEND_URL ||  'https://chat-frontend-chaya.netlify.app'];
 
   const io = new Server(server, {
     path: '/socket.io',
