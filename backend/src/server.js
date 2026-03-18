@@ -43,7 +43,7 @@ async function start() {
   }
 
   // Routes need access to messages, so require as a function
-  const routes = require('./src/routes')(messages);
+  const routes = require('./routes')(messages);
   app.use('/api', routes);
 
   // Serve frontend static files (public folder at project root)
@@ -51,7 +51,7 @@ async function start() {
 
   // Create HTTP server and attach socket.io
   const server = http.createServer(app);
-  require('./src/socket')(server, messages);
+  require('./socket')(server, messages);
 
   // Read PORT from environment to avoid hardcoded defaults
   const PORT = process.env.PORT;
