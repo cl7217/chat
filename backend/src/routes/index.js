@@ -20,7 +20,9 @@ module.exports = function (messages) {
   function issueToken(res, user) {
     const token = createToken(user)
     try {
-      res.cookie('token', token, { httpOnly: true, sameSite: 'lax' })
+      const isProd = process.env.NODE_ENV === 'production'
+      const cookieOptions = { httpOnly: true, sameSite: isProd ? 'none' : 'lax', secure: isProd }
+      res.cookie('token', token, cookieOptions)
     } catch (e) { /* ignore cookie failures */ }
     return token
   }
