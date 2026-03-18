@@ -1,10 +1,18 @@
 // Socket.IO initializer: attach to http server and wire real-time events
 module.exports = function initSocket(server, messages) {
   const { Server } = require('socket.io');
+  // use same allowedOrigins as server to support localhost and Netlify frontend
+  const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173', 'https://chat-frontend-chaya.netlify.app'];
+
   const io = new Server(server, {
     path: '/socket.io',
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+      origin: function (origin, callback) {
+        // allow requests with no origin (e.g., server-to-server, curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+        return callback(new Error('CORS policy: origin not allowed'), false);
+      },
       methods: ['GET', 'POST'],
       credentials: true
     }
