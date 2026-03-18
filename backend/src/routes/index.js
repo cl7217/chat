@@ -12,11 +12,17 @@ module.exports = function (messages) {
   const jwtSecret = process.env.JWT_SECRET || 'change_me';
   const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '7d';
 
+  function createToken(user) {
+    return jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'devsecret', { expiresIn: '7d' })
+  }
+
+  // issueToken now only sets the cookie and returns the token string.
   function issueToken(res, user) {
-    const payload = { id: user._id || user.id, username: user.username };
-    const token = jwt.sign(payload, jwtSecret, { expiresIn: jwtExpiresIn });
-    res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7, sameSite: 'lax' });
-    return token;
+    const token = createToken(user)
+    try {
+      res.cookie('token', token, { httpOnly: true, sameSite: 'lax' })
+    } catch (e) { /* ignore cookie failures */ }
+    return token
   }
 
   async function getUserFromToken(req) {
@@ -82,17 +88,26 @@ module.exports = function (messages) {
   });
 
   // Logout
-  router.post('/auth/logout', (req, res) => {
-    res.clearCookie('token');
-    res.json({ ok: true });
-  });
+  router.post('/logout', (req, res) => { res.clearCookie('token'); res.json({ ok: true }) })
 
   // Me endpoint
   router.get('/auth/me', async (req, res) => {
-    const user = await getUserFromToken(req);
-    if (!user) return res.status(401).json({ error: 'unauthenticated' });
-    res.json({ user });
-  });
+    try {
+      let token = req.cookies?.token
+      if (!token) {
+        const auth = req.headers?.authorization
+        if (auth && auth.startsWith('Bearer ')) token = auth.split(' ')[1]
+      }
+      if (!token) return res.status(401).json({ error: 'no token' })
+      const data = jwt.verify(token, process.env.JWT_SECRET || 'devsecret')
+      const user = await User.findById(data.id)
+      if (!user) return res.status(401).json({ error: 'invalid token' })
+      res.json({ user: { id: user._id, username: user.username, email: user.email, picture: user.picture } })
+    } catch (err) {
+      console.error('auth/me error', err)
+      res.status(401).json({ error: 'unauthorized' })
+    }
+  })
 
   // Google ID token authentication (client obtains ID token and sends to this endpoint)
   router.post('/auth/google', async (req, res) => {
@@ -103,14 +118,30 @@ module.exports = function (messages) {
       const ticket = await googleClient.verifyIdToken({ idToken: id_token, audience: process.env.GOOGLE_CLIENT_ID });
       const payload = ticket.getPayload();
       const googleId = payload.sub;
-      const email = payload.email;
-      const name = payload.name || email;
-      const picture = payload.picture;
-
-      let user = await User.findOne({ $or: [{ googleId }, { email }] });
+      const email = payload.email
+      let user = await User.findOne({ email })
       if (!user) {
-        user = new User({ username: name, googleId, email, picture });
-        await user.save();
+        // generate a safe username; avoid collisions with existing users
+        const rawName = (payload.name || email.split('@')[0]).toString()
+        const base = rawName.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 30) || 'user'
+        let candidate = base
+        let suffix = 1
+        // loop until we find a username that is not taken
+        while (await User.findOne({ username: candidate })) {
+          candidate = `${base}${suffix}`
+          suffix++
+        }
+        user = new User({ username: candidate, email, googleId: payload.sub, picture: payload.picture })
+        try {
+          await user.save()
+        } catch (saveErr) {
+          // If a duplicate key error still happens (race), try a fallback random suffix
+          if (saveErr && saveErr.code === 11000) {
+            const rand = Math.floor(Math.random() * 9000) + 1000
+            user.username = `${base}${rand}`
+            await user.save()
+          } else throw saveErr
+        }
       } else if (!user.googleId) {
         user.googleId = googleId;
         user.name = user.name || name;

@@ -49,11 +49,14 @@ export default function Login({ onLogin }) {
       <input placeholder="Name" value={name} onChange={e=>setName(e.target.value)} />
       <input placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} type="password" />
       <div className="buttons">
-        <button onClick={doLogin}>Login</button>
-        <button onClick={doRegister}>Register</button>
+        <button className="btn btn-primary" onClick={doLogin}>Login</button>
+        <button className="btn btn-ghost" onClick={doRegister}>Register</button>
       </div>
-      <div id="google-btn" />
-      <div className="note">Or sign in with Google</div>
+      <div style={{height:12}} />
+      <div className="center">
+        <div id="google-btn" className="btn-google" />
+      </div>
+      <div className="note muted center">Or sign in with Google</div>
     </div>
   )
 }
