@@ -1,28 +1,5 @@
 # Chat — README
 
-מהתחלה מהירה (Quick start)
----------------------------
-להרצה מקומית בפיתוח (PowerShell):
-
-1) Backend
-   - עבור לתיקיית ה-backend והתקן תלותיות:
-     cd backend; npm install
-   - הגדר משתני סביבה (דוגמה ב-PowerShell):
-     $env:MONGODB_URI = "mongodb://localhost:27017/chat"; $env:GOOGLE_CLIENT_ID = "<YOUR_GOOGLE_CLIENT_ID>"; $env:GOOGLE_CLIENT_SECRET = "<YOUR_GOOGLE_CLIENT_SECRET>"
-   - הפעל את השרת:
-     npm start
-
-2) Frontend
-   - עבור לתיקיית ה-frontend והתקן תלותיות:
-     cd frontend; npm install
-   - הפעל את ה-Dev server של Vite:
-     npm run dev
-
-3) פתח את הדפדפן ל-frontend:
-   - http://localhost:5173
-   - ה-API וה-socket בברירת מחדל: http://localhost:3000
-
-טיפ: ניתן להגדיר משתני סביבה גם בקובץ `.env` בתיקיית `backend` (dotenv) במקום להגדיר אותם ב-PowerShell.
 
 תקציר
 -------
@@ -39,16 +16,7 @@
   - backend/src/socket/index.js — טיפול בחיבורים ובשידור הודעות
   - frontend/src/* — React components, `src/styles.css` עבור העיצוב
   - frontend/vite.config.js — proxy של `/api` ו-`/socket.io` כדי למנוע בעיות CORS בפיתוח
-**ריצת פיתוח מקומית
-******------------------
-1) Backend
-   - cd backend; npm install
-   - העתק `backend/.env.template` ל-`.env` וערוך את הערכים המקומיים.
-   - npm run dev
-2) Frontend
-   - cd frontend; npm install
-   - העתק `frontend/.env.template` ל-`.env` וערוך אם צריך (VITE_API_URL)
-   - npm run dev
+
 
 פריסה לפרודקשן — סיכום מהיר
 ---------------------------
@@ -57,7 +25,16 @@ Backend (Render):
 - Build command: `npm install`
 - Start command: `npm start`
 - הוסף את משתני הסביבה (Environment) ב-Render — ראו `backend/.env.template`.
-- ודא `FRONTEND_URL` מוגדר ל-URL של ה-site ב-Netlify (ללא trailing slash) ו-set `NODE_ENV=production`.
+- ודא `FRONTEND_URL` מוגדר ל-URL של ה-site ב-Netlify (ללא trailing slash) ו-set `NODE_ENV=production`
+-
+- Frontend (Netlify):
+- New site -> Deploy from Git -> בחר את ה-repo/branch של `frontend`.
+- Build command: `npm run build`
+- Publish directory: `dist`
+- הוסף env vars ב-Netlify (ראו `frontend/.env.template`) ובצע deploy.
+- העדכן ב-Google Cloud Console:
+  - Authorized JavaScript origins: `https://<your-site>.netlify.app`
+  - Authorized redirect URIs: `https://<your-backend-on-render>.onrender.com/api/auth/google/callback`.
 
 כלי בינה מלאכותית שהשתמשתי בהם
 --------------------------------
